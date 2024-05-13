@@ -1,0 +1,17 @@
+{
+    "@metadata": {
+        "authors": [
+            "claude.ai"
+        ]
+    },
+    "clipup-desc": "يسمح للمستخدمين بتحميل الصور عن طريق لصقها أو سحبها وإفلاتها في نافذة التحرير",
+    "clipup-notLoadConfig": "لم يتم تحميل الإعدادات بشكل صحيح",
+    "clipup-progressText": "جاري التحميل...",
+    "clipup-failduploadText": "فشل التحميل",
+    "clipup-uploadingText": "جاري تحميل الصورة...",
+    "clipup-urlText": "رابط الصورة",
+    "clipup-notsamesize": "الملف المحمل لديه حجم مختلف عن الصورة الأصلية. يرجى المحاولة مرة أخرى.",
+    "clipup-istoolarge": "يتجاوز حجم الملف المحمل الحد الأقصى المسموح به وهو $1 كيلوبايت.",
+    "clipup-errdoingupload": "حدث خطأ أثناء تحميل الملف. يرجى المحاولة مرة أخرى لاحقًا.",
+    "clipup-mwfeedbackerrorText": "حدث خطأ أثناء تحميل الملف."
+}

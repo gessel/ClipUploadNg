@@ -1,0 +1,32 @@
+{
+    "name": "mediawiki/clip-upload",
+    "type": "mediawiki-extension",
+    "description": "A MediaWiki extension that allows users to upload images by pasting or dragging and dropping them into the edit window.",
+    "homepage": "https://www.mediawiki.org/wiki/Extension:ClipUpload",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "SLboat",
+            "homepage": "http://see.sl088.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/SLboat/ClipUpload/issues",
+        "source": "https://github.com/SLboat/ClipUpload"
+    },
+    "require": {
+        "composer/installers": ">=1.0.1"
+    },
+    "extra": {
+        "installer-paths": {
+            "../../extensions/ClipUpload": [
+                "mediawiki/clip-upload"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
+}

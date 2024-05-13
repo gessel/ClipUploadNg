@@ -1,0 +1,18 @@
+{
+    "@metadata": {
+        "authors": [
+            "claude.ai"
+        ]
+    },
+    "clipup-desc": "Ermöglicht es Benutzern, Bilder durch Einfügen oder Ziehen und Ablegen in das Bearbeitungsfenster hochzuladen",
+    "clipup-notLoadConfig": "Die Konfiguration wurde nicht richtig geladen",
+    "clipup-progressText": "Hochladen läuft...",
+    "clipup-failduploadText": "Hochladen fehlgeschlagen",
+    "clipup-uploadingText": "Bild wird hochgeladen...",
+    "clipup-urlText": "Bild-URL",
+    "clipup-notsamesize": "Die hochgeladene Datei hat eine andere Größe als das Originalbild. Bitte versuchen Sie es erneut.",
+    "clipup-notsamesize": "Die hochgeladene Datei hat eine andere Größe als das Originalbild. Bitte versuchen Sie es erneut.",
+    "clipup-istoolarge": "Die hochgeladene Datei überschreitet die maximal zulässige Dateigröße von $1 KB.",
+    "clipup-errdoingupload": "Beim Hochladen der Datei ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+    "clipup-mwfeedbackerrorText": "Beim Hochladen der Datei ist ein Fehler aufgetreten."
+}

@@ -1,0 +1,17 @@
+{
+    "@metadata": {
+        "authors": [
+            "claude.ai"
+        ]
+    },
+    "clipup-desc": "Permet aux utilisateurs de téléverser des images en les collant ou en les glissant-déposant dans la fenêtre d'édition",
+    "clipup-notLoadConfig": "La configuration n'a pas été chargée correctement",
+    "clipup-progressText": "Téléversement en cours...",
+    "clipup-failduploadText": "Échec du téléversement",
+    "clipup-uploadingText": "Téléversement de l'image en cours...",
+    "clipup-urlText": "URL de l'image",
+    "clipup-notsamesize": "Le fichier téléversé a une taille différente de l'image originale. Veuillez réessayer.",
+    "clipup-istoolarge": "Le fichier téléversé dépasse la taille maximale autorisée de $1 Ko.",
+    "clipup-errdoingupload": "Une erreur s'est produite lors du téléversement du fichier. Veuillez réessayer plus tard.",
+    "clipup-mwfeedbackerrorText": "Une erreur s'est produite lors du téléversement du fichier."
+}

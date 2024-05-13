@@ -1,0 +1,17 @@
+{
+    "@metadata": {
+        "authors": [
+            "Slboat"
+        ]
+    },
+    "clipup-desc": "快速从剪贴板获取上传内容,基于伟大的InlineAttachment",
+    "clipup-notLoadConfig": "没有加载配置信息...",
+    "clipup-progressText": "上传文件中...",
+    "clipup-failduploadText": "上传失败",
+    "clipup-uploadingText": "正在上传",
+    "clipup-urlText": "文件",
+    "clipup-notsamesize": "剪贴板内容一样",
+    "clipup-istoolarge": "剪贴板里的图片太大了-%sKB!",
+    "clipup-errdoingupload": "上传错误",
+    "clipup-mwfeedbackerrorText": "服务器返回错误信息"
+}

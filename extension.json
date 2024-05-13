@@ -1,0 +1,51 @@
+{
+    "manifest_version": 2,
+    "name": "ClipUpload",
+    "version": "1.3.0",
+    "author": "[http://see.sl088.com SLboat]",
+    "url": "https://www.mediawiki.org/wiki/Extension:ClipUpload",
+    "descriptionmsg": "clipup-desc",
+    "type": "parserhook",
+    "license-name": "GPL-2.0+",
+    "requires": {
+        "MediaWiki": ">= 1.35.0"
+    },
+    "MessagesDirs": {
+        "ClipUpload": [
+            "i18n"
+        ]
+    },
+    "ExtensionMessagesFiles": {
+        "ClipUploadMagic": "ClipUpload.i18n.magic.php"
+    },
+    "Hooks": {
+        "EditPage::showEditForm:initial": "ClipSetup"
+    },
+    "ResourceModules": {
+        "ext.ClipUpload": {
+            "scripts": [
+                "js/paste.js",
+                "js/inline-attach.js",
+                "js/clipupload.js",
+                "js/ink-go.js"
+            ],
+            "messages": [
+                "clipup-desc",
+                "clipup-notLoadConfig",
+                "clipup-progressText",
+                "clipup-failduploadText",
+                "clipup-uploadingText",
+                "clipup-urlText",
+                "clipup-notsamesize",
+                "clipup-istoolarge",
+                "clipup-errdoingupload",
+                "clipup-mwfeedbackerrorText"
+            ],
+            "localBasePath": "",
+            "remoteExtPath": "ClipUpload"
+        }
+    },
+    "ClipUpComment": "This file was uploaded from the clipboard ([[Category:Clipboard upload]]).",
+    "ClipUpMaxFileSize": 500,
+    "ClipUpCheckSameFileSize": false
+}

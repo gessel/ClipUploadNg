@@ -5,9 +5,9 @@ The ClipUpload extension allows to upload files directly from your clipboard.
 
 ### Installation
 
-1. [Download](https://github.com/SLboat/ClipUpload/archive/master.zip) the extension.
-2. Extract the files in a directory called `ClipUpload` in your `extensions/` folder.
-3. Add `require_once "$IP/extensions/ClipUpload/ClipUpload.php";` to your "LocalSettings.php" file.
+1. CD into the extension folder e.g. # cd /usr/local/www/mediawiki/extensions/
+2. clone the fork into the original folder name e.g. git clone git@github.com:gessel/ClipUploadNg.git ClipUpload
+3. Add `wfLoadExtension( 'ClipUpload' );` to your "LocalSettings.php" file.
 4. Configure this extension as needed by adding the parameters to your "LocalSettings.php" file (see the configuration section).
 5. Verify the installation on "Special:Version".
 
@@ -28,7 +28,7 @@ This extension provides three parameters available for configuration:
 
 ### Compatibility
 
-* Tested an working with MW 1.20.x and MW 1.21.x
+* Doesn't make MW 1.41 barf, but doesn't work yet either.
 
 ### Links
 
@@ -39,6 +39,8 @@ This extension provides three parameters available for configuration:
 * [Author](http://see.sl088.com/id/49t Author)
 
 ### Thanks go to
+* claude.ai
+* SLboat for the awesome original.
 * Martin Schwindl, who made the great upload extension MsUpload
 * rickyb98 for his help testing it a lot!
 * Karsten Hoffmeyer for improving the documentation

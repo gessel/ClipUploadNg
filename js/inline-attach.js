@@ -11,301 +11,287 @@
 (function(document, window) {
     "use strict";
 
-	/**
-	 * Simple function to merge the given objects
-	 * 和默认值进行合并，没设置的话就是默认的。。
-	 * @param {Object[]} object Multiple object parameters
-	 * @returns {Object}
-	 */
+    /**
+     * Simple function to merge the given objects
+     * Merge with default values, using the provided values if set.
+     * @param {Object[]} objects - Multiple object parameters
+     * @returns {Object} - Merged object
+     */
+    function merge(...objects) {
+        const result = {};
+        for (let i = objects.length - 1; i >= 0; i--) {
+            const obj = objects[i];
+            for (let key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    result[key] = obj[key];
+                }
+            }
+        }
+        return result;
+    }
 
-	function merge() {
-		var result = {};
-		for (var i = arguments.length - 1; i >= 0; i--) {
-			var obj = arguments[i];
-			for (var k in obj) {
-				result[k] = obj[k];
-			}
-		}
-		return result;
-	}
+    /**
+     * @param {Object} options - Configuration options
+     * @param {Object} instance - Editor instance
+     */
+    window.inlineAttach = function(options, instance) {
+        const settings = merge(options, inlineAttach.defaults);
+        const editor = instance;
+        const filenameTag = "{filename}";
+        let lastValue; // Last inserted value
+        const me = this;
 
-	/**
-	 * @param {Object} options
-	 */
-	window.inlineAttach = function(options, instance) {
+        /**
+         * Upload a given file blob
+         * @param {Blob} file - File blob to upload
+         */
+        this.uploadFile = function(file) {
+            const formData = new FormData();
+            const xhr = new XMLHttpRequest();
 
-		var settings = merge(options, inlineAttach.defaults),
-			editor = instance,
-			filenameTag = '{filename}',
-			lastValue, //最后一次变量
-			me = this;
+            // Attach the file. If coming from clipboard, add a default filename (only works in Chrome for now)
+            // http://stackoverflow.com/questions/6664967/how-to-give-a-blob-uploaded-as-formdata-a-file-name
+            formData.append(settings.uploadFieldName, file, `image-${Date.now()}.png`);
 
-		/**
-		 * Upload a given file blob
-		 *
-		 * @param {Blob} file
-		 */
-		this.uploadFile = function(file) {
-			var formData = new FormData(),
-				xhr = new XMLHttpRequest();
+            formData.append("action", "upload");
+            // Keep file upload warnings - considering their importance
+            // formData.append("ignorewarnings", true);
 
-			// Attach the file. If coming from clipboard, add a default filename (only works in Chrome for now)
-			// http://stackoverflow.com/questions/6664967/how-to-give-a-blob-uploaded-as-formdata-a-file-name
-			formData.append(settings.uploadFieldName, file, "image-" + Date.now() + ".png");
+            // Filename is important
+            formData.append("filename", settings.filename);
+            // Include comment
+            formData.append("comment", clipup_vars.comment);
+            formData.append("format", "json");
+            // Token is here
+            formData.append("token", mw.user.tokens.get("editToken"));
 
-			formData.append("action", "upload");
-			//保留文件上传提醒-考虑到它是如此的紧要
-			//formData.append("ignorewarnings", true);
+            // TODO: Rewrite the POST data to include more parameters
+            xhr.open("POST", settings.uploadUrl);
+            xhr.onload = function() {
+                // If HTTP status is OK or Created
+                if (xhr.status === 200 || xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    // Trigger uploaded file event, pass back the returned data and the original file
+                    me.onUploadedFile(data, file);
+                } else {
+                    // Trigger upload error event, don't return anything
+                    me.onErrorUploading();
+                }
+            };
+            xhr.send(formData);
+        };
 
-			//文件名这很重要
-			formData.append("filename", settings.filename);
-			//引入注释
-			formData.append("comment", clipup_vars.comment);
-			formData.append("format", "json");
-			//token这里是
-			formData.append("token", mw.user.tokens.get('editToken'));
+        /**
+         * Check if the given file is allowed
+         * @param {File} file - File to check
+         * @returns {boolean} - Whether the file is allowed
+         */
+        this.isAllowedFile = function(file) {
+            return settings.allowedTypes.includes(file.type);
+        };
 
-			//todo：改写post数据包含更多参数
-			xhr.open('POST', settings.uploadUrl);
-			xhr.onload = function() {
-				// If HTTP status is OK or Created
-				if (xhr.status === 200 || xhr.status === 201) {
-					var data = JSON.parse(xhr.responseText);
-					//触发上传完成事件，回传返回data，传回原始file
-					me.onUploadedFile(data, file);
-				} else {
-					//触发上传错误事件，不返回任何东西
-					me.onErrorUploading();
-				}
-			};
-			xhr.send(formData);
-		};
+        /**
+         * When a file has finished uploading
+         * @param {Object} data - Upload response data
+         * @param {File} uploadedFile - Uploaded file
+         */
+        this.onUploadedFile = function(data, uploadedFile) {
+            const result = settings.onUploadedFile(data, uploadedFile);
+            let replaceValue = null;
+            let filename;
 
-		/**
-		 * Check if the given file is allowed
-		 *
-		 * @param {File} file
-		 */
-		this.isAllowedFile = function(file) {
-			return settings.allowedTypes.indexOf(file.type) >= 0;
-		};
+            // Check for errors
+            if (data.error) {
+                // Replace with appropriate final error message
+                replaceValue = settings.mwfeedbackerrorText.replace("%s", data.error.info);
+            } else {
+                const returnJson = data.upload;
+                // Check the return status
+                if (returnJson.result === "Success") {
+                    filename = returnJson.filename;
+                    // Final replace value
+                    replaceValue = settings.urlText.replace(filenameTag, filename);
+                } else if (returnJson.result === "Warning") {
+                    let lastWarningName;
+                    for (let warningType in returnJson.warnings) {
+                        lastWarningName = warningType;
+                    }
+                    // Here we get the warning type
+                    if (lastWarningName === "duplicate") {
+                        // Write the duplicate name
+                        filename = returnJson.warnings.duplicate[0];
+                        replaceValue = settings.urlText.replace(filenameTag, filename);
+                    } else if (lastWarningName === "exists") {
+                        // Already exists
+                        filename = returnJson.warnings.exists;
+                        replaceValue = settings.urlText.replace(filenameTag, filename);
+                    } else {
+                        // Other warning messages, just prompt
+                        replaceValue = settings.failduploadText.replace("%s", lastWarningName);
+                    }
+                }
+            }
 
-		/**
-		 * When a file has finished uploading
-		 *
-		 * @param {Object} data
-		 */
-		this.onUploadedFile = function(data, upload_file) {
-			var result = settings.onUploadedFile(data, upload_file);
-			var replaceValue = null;
-			var filename;
-			//检查是否出错
-			if (data.error) {
-				//进行适当的替换最终错误信息
-				replaceValue = settings.mwfeedbackerrorText.replace("%s", data.error.info);
-			} else {
-				var return_json = data.upload;
-				//检查返回状态
-				if (return_json.result == "Success") {
-					filename = return_json.filename;
-					//最终替换值
-					replaceValue = settings.urlText.replace(filenameTag, filename);
-				} else if (return_json.result == "Warning") {
-					var last_waring_name;
-					for (var Warning_Type in return_json.warnings) {
-						last_waring_name = Warning_Type;
-					}
-					//这里获得了警告类型
-					if (last_waring_name == "duplicate") {
-						//写入重复的名称
-						filename = return_json.warnings.duplicate[0];
-						replaceValue = settings.urlText.replace(filenameTag, filename);
-					} else if (last_waring_name == "exists") {
-						//已经存在
-						filename = return_json.warnings.exists;
-						replaceValue = settings.urlText.replace(filenameTag, filename);
+            if (result !== false && replaceValue) {
+                replaceValue += "\n"; // Always add multiple newlines
+                // Let the factory handle it
+                ink_replace(lastValue, replaceValue);
+            }
+        };
 
-					} else { //其他报警信息，只是提示
-						replaceValue = settings.failduploadText.replace("%s", last_waring_name);
+        /**
+         * Custom upload handler
+         * @param {Blob} file - File to upload
+         * @returns {boolean} - Whether to prevent default upload behavior
+         */
+        this.customUploadHandler = function(file) {
+            return settings.customUploadHandler(file);
+        };
 
-					}
+        /**
+         * When a file didn't upload properly.
+         * Override by passing your own onErrorUploading function with settings.
+         */
+        this.onErrorUploading = function() {
+            // By default, delete everything
+            ink_replace(lastValue, "");
+            if (settings.customErrorHandler()) {
+                window.alert(settings.errorText);
+            }
+        };
 
-				}
+        /**
+         * Append a line of text at the bottom, ensuring there aren't unnecessary newlines
+         * @param {string} previous - Current content
+         * @param {string} appended - Value which should be appended after the current content
+         * @returns {string} - Formatted text with the appended value
+         */
+        function appendInItsOwnLine(previous, appended) {
+            return (previous + "\n\n[[D]]" + appended)
+                .replace(/(\n{2,})\[\[D\]\]/, "\n")
+                .replace(/^(\n*)/, "");
+        }
 
-			}
-			if (result !== false && replaceValue) {
-				replaceValue += "\n"; //加上多个换行，总是如此
-				//交给工厂去代劳
-				ink_replace(lastValue,replaceValue);
+        /**
+         * When a file has been received by a drop or paste event
+         * @param {Blob} file - Received file
+         */
+        this.onReceivedFile = function(file) {
+            // Record and set here, a truthy value is returned to ensure validity
+            const result = settings.onReceivedFile(file);
+            if (result !== false) {
+                lastValue = settings.progressText;
+                // Insert the information marker to be inserted, official behavior is to append it at the end
+                // We changed it back to wiki style
+                // editor.setValue(appendInItsOwnLine(editor.getValue(), lastValue));
+            }
+        };
 
-			}
-		};
+        /**
+         * Catches the paste event
+         * @param {Event} event - Paste event
+         * @param {Object} data - Paste data
+         * @returns {boolean} - If a file is handled
+         */
+        this.onPaste = function(event, data) {
+            this.onReceivedFile(data.blob);
 
-		/**
-		 * Custom upload handler
-		 *
-		 * @param {Blob} file
-		 * @return {Boolean} when false is returned it will prevent default upload behavior
-		 */
-		this.customUploadHandler = function(file) {
-			return settings.customUploadHandler(file);
-		};
+            if (this.customUploadHandler(data.blob)) {
+                this.uploadFile(data.blob);
+            }
 
-		/**
-		 * When a file didn't upload properly.
-		 * Override by passing your own onErrorUploading function with settings.
-		 *
-		 * @param {Object} data
-		 */
-		this.onErrorUploading = function() {
-			//默认删除一切						
-			ink_replace(lastValue,"");	
-			if (settings.customErrorHandler()) {
-				window.alert(settings.errorText);
-			}
-		};
+            return true;
+        };
+    };
 
-		/**
-		 * Append a line of text at the bottom, ensuring there aren't unnecessary newlines
-		 *
-		 * @param {String} appended Current content
-		 * @param {String} previous Value which should be appended after the current content
-		 */
-		//处理空行
+    /**
+     * Editor
+     */
+    window.inlineAttach.Editor = function(instance) {
+        const input = instance;
 
-		function appendInItsOwnLine(previous, appended) {
-			return (previous + "\n\n[[D]]" + appended)
-				.replace(/(\n{2,})\[\[D\]\]/, "\n")
-				.replace(/^(\n*)/, "");
-		}
+        return {
+            getValue: function() {
+                return input.value;
+            },
+            setValue: function(value) {
+                input.value = value;
+            }
+        };
+    };
 
-		/**
-		 * When a file has been received by a drop or paste event
-		 * @param {Blob} file
-		 */
-		this.onReceivedFile = function(file) {
-			//记录并且设置这里，这里返回一个真值用来保证有效的玩意
-			var result = settings.onReceivedFile(file);
-			if (result !== false) {
-				lastValue = settings.progressText;
-				//置入要放入的信息标记，官方的是插入到屁股后面，我们改动回去了wiki的风格
-				//editor.setValue(appendInItsOwnLine(editor.getValue(), lastValue));
-			}
-		};
+    /**
+     * Default configuration
+     */
+    window.inlineAttach.defaults = {
+        // URL to upload the attachment
+        uploadUrl: "upload_attachment.php",
+        // Request field name where the attachment will be placed in the form data
+        uploadFieldName: "file",
+        // Where is the filename placed in the response
+        downloadFieldName: "filename",
+        allowedTypes: ["image/jpeg", "image/png", "image/jpg", "image/gif"],
 
-		/**
-		 * Catches the paste event
-		 *
-		 * @param {Event} e
-		 * @returns {Boolean} If a file is handled
-		 */
-		this.onPaste = function(ev, data) {
-			this.onReceivedFile(data.blob);
-			
-			if (this.customUploadHandler(data.blob)) {
-				this.uploadFile(data.blob);
-			}
-			
-			return true;
-		};
+        /**
+         * Will be inserted on a drop or paste event
+         */
+        progressText: "![Uploading file...]()",
 
-	};
+        /**
+         * When a file has successfully been uploaded, the last inserted text
+         * will be replaced by the urlText, the {filename} tag will be replaced
+         * by the filename that has been returned by the server
+         */
+        urlText: "![file]({filename})",
 
-	/**
-	 * Editor
-	 */
-	window.inlineAttach.Editor = function(instance) {
+        /**
+         * When a file is received by drag-drop or paste
+         */
+        onReceivedFile: function() {},
 
-		var input = instance;
+        /**
+         * Custom upload handler
+         * @returns {boolean} - When false is returned, it will prevent default upload behavior
+         */
+        customUploadHandler: function() {
+            return true;
+        },
 
-		return {
-			getValue: function() {
-				return input.value;
-			},
-			setValue: function(val) {
-				input.value = val;
-			}
-		};
-	};
+        /**
+         * Custom error handler. Runs after removing the placeholder text and before the alert().
+         * Return false from this function to prevent the alert dialog.
+         * @returns {boolean} - When false is returned, it will prevent default error behavior
+         */
+        customErrorHandler: function() {
+            return true;
+        },
 
-	/**
-	 * Default configuration
-	 */
-	window.inlineAttach.defaults = {
-		// URL to upload the attachment
-		uploadUrl: 'upload_attachment.php',
-		// Request field name where the attachment will be placed in the form data
-		uploadFieldName: 'file',
-		// Where is the filename placed in the response
-		downloadFieldName: 'filename',
-		allowedTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'],
+        /**
+         * Text for default error when uploading
+         */
+        errorText: "Error uploading file",
 
-		/**
-		 * Will be inserted on a drop or paste event
-		 */
-		progressText: '![Uploading file...]()',
+        /**
+         * When a file has successfully been uploaded
+         */
+        onUploadedFile: function() {}
+    };
 
-		/**
-		 * When a file has successfully been uploaded the last inserted text
-		 * will be replaced by the urlText, the {filename} tag will be replaced
-		 * by the filename that has been returned by the server
-		 */
-		urlText: "![file]({filename})",
+    /**
+     * Attach to a standard input field
+     * @param {HTMLElement} input - Input field element
+     * @param {Object} options - Configuration options
+     */
+    window.inlineAttach.attachToInput = function(input, options) {
+        options = options || {};
 
-		/**
-		 * When a file is received by drag-drop or paste
-		 */
-		onReceivedFile: function() {},
+        const editor = new inlineAttach.Editor(input);
+        const inlineattach = new inlineAttach(options, editor);
 
-		/**
-		 * Custom upload handler
-		 *
-		 * @return {Boolean} when false is returned it will prevent default upload behavior
-		 */
-		customUploadHandler: function() {
-			return true;
-		},
+        $(input).pastableTextarea();
 
-		/**
-		 * Custom error handler. Runs after removing the placeholder text and before the alert().
-		 * Return false from this function to prevent the alert dialog.
-		 *
-		 * @return {Boolean} when false is returned it will prevent default error behavior
-		 */
-		customErrorHandler: function() {
-			return true;
-		},
-
-		/**
-		 * Text for default error when uploading
-		 */
-		errorText: "Error uploading file",
-
-		/**
-		 * When a file has succesfully been uploaded
-		 */
-		onUploadedFile: function() {}
-	};
-
-	/**
-	 * Attach to a standard input field
-	 *
-	 * @param {Input} input
-	 * @param {Object} options
-	 */
-	window.inlineAttach.attachToInput = function(input, options) {
-
-		options = options || {};
-
-		var editor = new inlineAttach.Editor(input),
-			inlineattach = new inlineAttach(options, editor);
-		
-		$(input).pastableTextarea();
-		
-		$(input).on('pasteImage', function(ev, data) {
-			inlineattach.onPaste(ev, data);
-		});
-
-	};
-
+        $(input).on("pasteImage", function(event, data) {
+            inlineattach.onPaste(event, data);
+        });
+    };
 })(document, window);

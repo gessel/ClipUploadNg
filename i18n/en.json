@@ -1,0 +1,17 @@
+{
+    "@metadata": {
+        "authors": [
+            "Slboat"
+        ]
+    },
+    "clipup-desc": "Allows users to upload images by pasting or dragging and dropping them into the edit window",
+    "clipup-notLoadConfig": "Configuration not loaded properly",
+    "clipup-progressText": "Uploading...",
+    "clipup-failduploadText": "Upload failed",
+    "clipup-uploadingText": "Uploading image...",
+    "clipup-urlText": "Image URL",
+    "clipup-notsamesize": "The uploaded file has a different size than the original image. Please try again.",
+    "clipup-istoolarge": "The uploaded file exceeds the maximum allowed file size of $1 KB.",
+    "clipup-errdoingupload": "An error occurred while uploading the file. Please try again later.",
+    "clipup-mwfeedbackerrorText": "An error occurred while uploading the file."
+}

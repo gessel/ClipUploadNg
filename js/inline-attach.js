@@ -11,6 +11,26 @@
 (function(document, window) {
     "use strict";
 
+    $(document).ready(function() {
+        // Define the pastableTextarea plugin
+        $.fn.pastableTextarea = function() {
+            $(this).each(function() {
+                $(this).on('paste', function(event) {
+                    var clipboard = event.originalEvent.clipboardData;
+                    var content = clipboard.getData('text/plain');
+
+                    if (document.queryCommandSupported('insertText')) {
+                        document.execCommand('insertText', false, content);
+                    } else {
+                        document.execCommand('paste', false, content);
+                    }
+
+                    event.preventDefault();
+                });
+            });
+        };
+    });
+
     /**
      * Simple function to merge the given objects
      * Merge with default values, using the provided values if set.

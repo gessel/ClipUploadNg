@@ -83,7 +83,7 @@
             formData.append("comment", clipup_vars.comment);
             formData.append("format", "json");
             // Token is here
-            formData.append("token", mw.user.tokens.get("editToken"));
+            formData.append("token", mw.user.tokens.get("csrfToken"));
 
             // TODO: Rewrite the POST data to include more parameters
             xhr.open("POST", settings.uploadUrl);
